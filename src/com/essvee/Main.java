@@ -18,6 +18,7 @@ public class Main {
         main.writeOut();
     }
 
+
     // Parses each <record> element in xml into an object of type Record
     public void doParse() {
         try {

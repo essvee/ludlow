@@ -1,5 +1,7 @@
 package com.essvee;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import java.io.Serializable;
 
 /**
@@ -19,15 +21,15 @@ public class Record implements Serializable {
 
     public Record(String priref, String objectNumber, String objectName, String scientificName, String description,
                   String collectionPlace, String osGridRef, String stratigraphyUnit, String stratigraphyType) {
-        this.priref = priref;
-        this.objectNumber = objectNumber;
-        this.objectName = objectName;
-        this.scientificName = scientificName;
-        this.description = description;
-        this.collectionPlace = collectionPlace;
-        this.stratigraphyUnit = stratigraphyUnit;
-        this.stratigraphyType = stratigraphyType;
-        this.osGridRef = osGridRef;
+        this.priref = StringEscapeUtils.escapeCsv(priref);
+        this.objectNumber = StringEscapeUtils.escapeCsv(objectNumber);
+        this.objectName = StringEscapeUtils.escapeCsv(objectName);
+        this.scientificName = StringEscapeUtils.escapeCsv(scientificName);
+        this.description = StringEscapeUtils.escapeCsv(description);
+        this.collectionPlace = StringEscapeUtils.escapeCsv(collectionPlace);
+        this.stratigraphyUnit = StringEscapeUtils.escapeCsv(stratigraphyUnit);
+        this.stratigraphyType = StringEscapeUtils.escapeCsv(stratigraphyType);
+        this.osGridRef = StringEscapeUtils.escapeCsv(osGridRef);;
         setBigString();
     }
 
@@ -49,7 +51,7 @@ public class Record implements Serializable {
     }
 
     public void setCollectionPlace(String str) {
-        collectionPlace = str;
+        collectionPlace = StringEscapeUtils.escapeCsv(str);
     }
 
     public String getStratigraphyUnit() {
@@ -57,7 +59,7 @@ public class Record implements Serializable {
     }
 
     public void setStratigraphyUnit(String str) {
-        stratigraphyUnit = str;
+        stratigraphyUnit = StringEscapeUtils.escapeCsv(str);
     }
 
     public String getStratigraphyType() {
@@ -65,7 +67,7 @@ public class Record implements Serializable {
     }
 
     public void setStratigraphyType(String str) {
-        stratigraphyType = str;
+        stratigraphyType = StringEscapeUtils.escapeCsv(str);
     }
 
     public String getOsGridRef() {
