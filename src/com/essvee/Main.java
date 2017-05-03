@@ -95,32 +95,19 @@ public class Main {
 
     // Writes each object to a new row in ludlowOut.txt
     public void writeOut() {
-        BufferedWriter bw = null;
-        FileWriter fw = null;
         String headerString = "priref \t" + "Object Number \t" + "Object Name \t" + "Scientific Name \t" + "Description \t" + "Collection Place \t"
                 + "OS Grid Ref \t" + "Stratigraphy Unit \t" + "Stratigraphy Type \n";
 
-        try {
-            fw = new FileWriter("ludlowOut.txt");
-            bw = new BufferedWriter(fw);
+        String fileName = "ludlowOut.txt";
 
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
             bw.write(headerString);
-
             for (Record record : recordList) {
                 bw.write(record.getBigString());
             }
         } catch (IOException ex) {
             System.out.println("Flush failed: couldn't write ludlow.txt");
             ex.printStackTrace();
-        } finally {
-            try {
-                if (bw != null)
-                    bw.close();
-                if (fw != null)
-                    fw.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
         }
     }
 }
