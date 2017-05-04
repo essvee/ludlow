@@ -98,7 +98,7 @@ public class Main {
 
             // Put each image location into a separate column
         } else if ((nList.getLength() > 0 && tagName.equals("reproduction.reference"))) {
-            returnString = ""
+            returnString = "";
             int thisColumns = 0;
             for (int i = 0; i < nList.getLength(); i++) {
                 returnString += StringUtils.substringAfterLast(eElement
