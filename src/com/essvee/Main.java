@@ -14,8 +14,7 @@ import org.w3c.dom.Element;
 public class Main {
     private ArrayList<Record> recordList = new ArrayList<>();
     private String headerString = "priref \t" + "Object Number \t" + "Object Name \t" + "Scientific Name \t" + "Description \t" + "Collector Name \t" + "Collection Place \t"
-            + "OS Grid Ref \t" + "Stratigraphy Unit \t" + "Stratigraphy Type \t";
-    private int maxColumns = 0;
+            + "OS Grid Ref \t" + "Stratigraphy Unit \t" + "Stratigraphy Type \t" + "Image URL";
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -98,19 +97,19 @@ public class Main {
 
             // Put each image location into a separate column
         } else if ((nList.getLength() > 0 && tagName.equals("reproduction.reference"))) {
-            returnString = "";
-            int thisColumns = 0;
-            for (int i = 0; i < nList.getLength(); i++) {
-                returnString += StringUtils.substringAfterLast(eElement
+            int i = 0;
+            if (eElement.getElementsByTagName(tagName).item(0).getTextContent().equals("")) {
+                i = 1;
+            }
+
+            if (nList.getLength() > 1 && eElement.getElementsByTagName(tagName).item(1).getTextContent().equals("")) {
+                i = 2;
+            }
+                returnString = "https://github.com/NaturalHistoryMuseum/LudlowMuseumImgs/raw/master/" + StringUtils.substringAfterLast(eElement
                         .getElementsByTagName(tagName)
                         .item(i)
-                        .getTextContent() + "\t ", "\\");
-                thisColumns++;
-                if (thisColumns > maxColumns) {
-                    maxColumns = thisColumns;
-                    headerString += "Image link " + (i + 1) + "\t";
-                }
-                }
+                        .getTextContent(), "\\");
+
         } else {
             returnString = "unknown" + "\t";
         }
