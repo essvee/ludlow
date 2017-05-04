@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.ArrayList;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+
+import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
@@ -11,13 +13,15 @@ import org.w3c.dom.Element;
 
 public class Main {
     private ArrayList<Record> recordList = new ArrayList<>();
+    private String headerString = "priref \t" + "Object Number \t" + "Object Name \t" + "Scientific Name \t" + "Description \t" + "Collector Name \t" + "Collection Place \t"
+            + "OS Grid Ref \t" + "Stratigraphy Unit \t" + "Stratigraphy Type \t";
+    private int maxColumns = 0;
 
     public static void main(String[] args) {
         Main main = new Main();
         main.doParse();
         main.writeOut();
     }
-
 
     // Parses each <record> element in xml into an object of type Record
     public void doParse() {
@@ -52,14 +56,17 @@ public class Main {
                     String objectName = getElementValue(eElement, "object_name");
                     String scientificName = getElementValue(eElement, "taxonomy.scientific_name");
                     String description = getElementValue(eElement, "description");
+                    String collectorName = getElementValue(eElement, "field_coll.name");
                     String collectionPlace = getElementValue(eElement, "field_coll.place");
                     String osGridRef = getElementValue(eElement, "field_coll.gridref");
                     String stratigraphyUnit = getElementValue(eElement, "stratigraphy.unit");
                     String stratigraphyType = getElementValue(eElement, "stratigraphy.type");
+                    String reproRef = getElementValue(eElement, "reproduction.reference");
 
                     // Create new record object and store
                     Record tempRec = new Record(priref, objectNumber, objectName, scientificName,
-                            description, collectionPlace, osGridRef, stratigraphyUnit, stratigraphyType);
+                            description, collectorName, collectionPlace, osGridRef, stratigraphyUnit, stratigraphyType,
+                            reproRef);
                     recordList.add(tempRec);
                     System.out.println("Size of recordList is: " + recordList.size());
 
@@ -74,7 +81,7 @@ public class Main {
     public String getElementValue(Element eElement, String tagName) {
         String returnString = "";
         NodeList nList = eElement.getElementsByTagName(tagName);
-        if (nList.getLength() > 0) {
+        if (nList.getLength() > 0 && tagName != "reproduction.reference") {
             for (int i = 0; i < nList.getLength(); i++) {
                 if (i != (nList.getLength() - 1)) {
                     returnString += eElement
@@ -88,6 +95,22 @@ public class Main {
                             .getTextContent() + "\t";
                 }
             }
+
+            // Put each image location into a separate column
+        } else if ((nList.getLength() > 0 && tagName.equals("reproduction.reference"))) {
+            returnString = ""
+            int thisColumns = 0;
+            for (int i = 0; i < nList.getLength(); i++) {
+                returnString += StringUtils.substringAfterLast(eElement
+                        .getElementsByTagName(tagName)
+                        .item(i)
+                        .getTextContent() + "\t ", "\\");
+                thisColumns++;
+                if (thisColumns > maxColumns) {
+                    maxColumns = thisColumns;
+                    headerString += "Image link " + (i + 1) + "\t";
+                }
+                }
         } else {
             returnString = "unknown" + "\t";
         }
@@ -96,10 +119,9 @@ public class Main {
 
     // Writes each object to a new row in ludlowOut.txt
     public void writeOut() {
-        String headerString = "priref \t" + "Object Number \t" + "Object Name \t" + "Scientific Name \t" + "Description \t" + "Collection Place \t"
-                + "OS Grid Ref \t" + "Stratigraphy Unit \t" + "Stratigraphy Type \n";
-
         String fileName = "ludlowOut.txt";
+
+        headerString += "\n";
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
             bw.write(headerString);
