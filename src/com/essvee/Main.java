@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
@@ -13,8 +13,9 @@ import org.w3c.dom.Element;
 
 public class Main {
     private ArrayList<Record> recordList = new ArrayList<>();
-    private String headerString = "priref \t" + "Object Number \t" + "Object Name \t" + "Scientific Name \t" + "Description \t" + "Collector Name \t" + "Collection Place \t"
-            + "OS Grid Ref \t" + "Stratigraphy Unit \t" + "Stratigraphy Type \t" + "Image URL";
+    private static final String HEADER_STRING = "priref\tObject Number\tObject Name\tScientific Name\tDescription\tCollector Name\tCollection Place\t" +
+        "OS Grid Ref\tStratigraphy Unit\tStratigraphy Type\tImage URL\n";
+    private static final String URL = "https://github.com/NaturalHistoryMuseum/LudlowMuseumImgs/raw/master/";
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -40,17 +41,15 @@ public class Main {
             for (int temp = 0; temp < nList.getLength(); temp++) {
                 // Returns the item in the list at index point 'temp'
                 Node nNode = nList.item(temp);
-                // Prints on new line
-                System.out.println("\nCurrent Element :" + nNode.getNodeName());
 
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
 
-                    // Get the value of each element
-                    String priref = eElement
-                            .getElementsByTagName("priref")
-                            .item(0)
-                            .getTextContent() + "\t";
+                    // Get the value of the first field if we only want one
+                    String priref = getFirstElementValue(eElement, "priref");
+                    String reproRef = URL + getFirstElementValue(eElement, "reproduction.reference");
+
+                    // Concatenate values of duplicate fields together if we want them all
                     String objectNumber = getElementValue(eElement, "object_number");
                     String objectName = getElementValue(eElement, "object_name");
                     String scientificName = getElementValue(eElement, "taxonomy.scientific_name");
@@ -60,15 +59,13 @@ public class Main {
                     String osGridRef = getElementValue(eElement, "field_coll.gridref");
                     String stratigraphyUnit = getElementValue(eElement, "stratigraphy.unit");
                     String stratigraphyType = getElementValue(eElement, "stratigraphy.type");
-                    String reproRef = getElementValue(eElement, "reproduction.reference");
+
 
                     // Create new record object and store
                     Record tempRec = new Record(priref, objectNumber, objectName, scientificName,
                             description, collectorName, collectionPlace, osGridRef, stratigraphyUnit, stratigraphyType,
                             reproRef);
                     recordList.add(tempRec);
-                    System.out.println("Size of recordList is: " + recordList.size());
-
                 }
             }
         } catch (Exception e) {
@@ -76,11 +73,32 @@ public class Main {
         }
     }
 
-    // Checks if field needs to be concatenated and adds tab delimiter.
+    // For when you only want the value from the first occurrence of a field
+    public String getFirstElementValue(Element eElement, String tagName) {
+        String returnString = "";
+        int i = 0;
+
+        // Iterates over fields until it finds the first non-empty one
+        while (returnString.equals("")) {
+            returnString = eElement
+                .getElementsByTagName(tagName)
+                .item(i)
+                .getTextContent();
+            i++;
+        }
+
+        // For image url field, trim the local filepath so we just have the filename
+        if (tagName.equals("reproduction.reference")) {
+            returnString = StringUtils.substringAfterLast(returnString, "\\");
+        }
+        return returnString + "\t";
+    }
+
+    // For when you want all the values, concatenated where > 1 exists
     public String getElementValue(Element eElement, String tagName) {
         String returnString = "";
         NodeList nList = eElement.getElementsByTagName(tagName);
-        if (nList.getLength() > 0 && tagName != "reproduction.reference") {
+        if (nList.getLength() > 0) {
             for (int i = 0; i < nList.getLength(); i++) {
                 if (i != (nList.getLength() - 1)) {
                     returnString += eElement
@@ -91,39 +109,22 @@ public class Main {
                     returnString += eElement
                             .getElementsByTagName(tagName)
                             .item(i)
-                            .getTextContent() + "\t";
+                            .getTextContent();
                 }
             }
 
-            // Put each image location into a separate column
-        } else if ((nList.getLength() > 0 && tagName.equals("reproduction.reference"))) {
-            int i = 0;
-            if (eElement.getElementsByTagName(tagName).item(0).getTextContent().equals("")) {
-                i = 1;
-            }
-
-            if (nList.getLength() > 1 && eElement.getElementsByTagName(tagName).item(1).getTextContent().equals("")) {
-                i = 2;
-            }
-                returnString = "https://github.com/NaturalHistoryMuseum/LudlowMuseumImgs/raw/master/" + StringUtils.substringAfterLast(eElement
-                        .getElementsByTagName(tagName)
-                        .item(i)
-                        .getTextContent(), "\\");
-
         } else {
-            returnString = "unknown" + "\t";
+            returnString = "unknown";
         }
-        return returnString;
+        return returnString + "\t";
     }
 
     // Writes each object to a new row in ludlowOut.txt
     public void writeOut() {
         String fileName = "ludlowOut.txt";
 
-        headerString += "\n";
-
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
-            bw.write(headerString);
+            bw.write(HEADER_STRING);
             for (Record record : recordList) {
                 bw.write(record.getBigString());
             }
