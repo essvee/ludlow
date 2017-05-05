@@ -2,8 +2,8 @@ package com.essvee;
 
 import java.io.*;
 import java.util.ArrayList;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
@@ -14,7 +14,7 @@ import org.w3c.dom.Element;
 public class Main {
     private ArrayList<Record> recordList = new ArrayList<>();
     private static final String HEADER_STRING = "priref,Object Number,Object Name,Scientific Name,Description,Collector Name,Collection Place," +
-        "OS Grid Ref,Stratigraphy Unit,Stratigraphy Type,Image URL\n";
+        "OS Grid Ref,Stratigraphy Unit,Stratigraphy Type,Image URL,Latitude,Longitude\n";
     private static final String URL = "https://github.com/NaturalHistoryMuseum/LudlowMuseumImgs/raw/master/";
 
     public static void main(String[] args) {
@@ -24,7 +24,7 @@ public class Main {
     }
 
     // Parses each <record> element in xml into an object of type Record
-    public void doParse() {
+    private void doParse() {
         try {
             File inputFile = new File("input.xml");
 
@@ -35,7 +35,6 @@ public class Main {
 
             NodeList nList = doc.getElementsByTagName("record");
 
-            // Todo: Convert OS to lat long (Use Jcoord?)
             // Iterate over each node
             for (int temp = 0; temp < nList.getLength(); temp++) {
                 // Returns the item in the list at index point 'temp'
@@ -71,15 +70,16 @@ public class Main {
         }
     }
 
-    public String escapeCommas(String str) {
-      if (StringUtils.contains(str, ",")) {
-        str = "\"" + str + "\"";
+    private String escapeCommas(String strIn) {
+        String strOut = strIn;
+        if (StringUtils.contains(strIn, ",")) {
+        strOut = "\"" + strIn + "\"";
       }
-      return str;
+      return strOut;
     }
 
     // For when you only want the value from the first occurrence of a field
-    public String getFirstElementValue(Element eElement, String tagName) {
+    private String getFirstElementValue(Element eElement, String tagName) {
         String returnString = "";
         int i = 0;
 
@@ -96,11 +96,11 @@ public class Main {
         if (tagName.equals("reproduction.reference")) {
             returnString = StringUtils.substringAfterLast(returnString, "\\");
         }
-        return escapeCommas(returnString) + ",";
+        return escapeCommas(returnString);
     }
 
     // For when you want all the values, concatenated where > 1 exists
-    public String getElementValue(Element eElement, String tagName) {
+    private String getElementValue(Element eElement, String tagName) {
         String returnString = "";
         NodeList nList = eElement.getElementsByTagName(tagName);
         if (nList.getLength() > 0) {
@@ -117,15 +117,14 @@ public class Main {
                             .getTextContent();
                 }
             }
-
         } else {
             returnString = "unknown";
         }
-        return escapeCommas(returnString) + ",";
+        return escapeCommas(returnString);
     }
 
     // Writes each object to a new row in ludlowOut.csv
-    public void writeOut() {
+    private void writeOut() {
         String fileName = "ludlowOut.csv";
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {

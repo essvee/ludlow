@@ -1,21 +1,13 @@
 package com.essvee;
 
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.Serializable;
-import java.net.URL;
+import uk.me.jstott.jcoord.LatLng;
+import uk.me.jstott.jcoord.OSRef;
 
 /**
  * Created by sarav on 02/05/2017.
  */
-public class Record implements Serializable {
+class Record implements Serializable {
     private String priref;
     private String objectNumber;
     private String objectName;
@@ -28,10 +20,10 @@ public class Record implements Serializable {
     private String stratigraphyType; // May be > 1 occurrence
     private String reproRef;
     private String bigString;
-    private double latitude;
-    private double longitude;
+    private Double latitude = null;
+    private Double longitude = null;
 
-    public Record(String priref, String objectNumber, String objectName, String scientificName, String description, String collectorName,
+    Record(String priref, String objectNumber, String objectName, String scientificName, String description, String collectorName,
                   String collectionPlace, String osGridRef, String stratigraphyUnit, String stratigraphyType, String reproRef) {
         this.priref = priref;
         this.objectNumber = objectNumber;
@@ -43,82 +35,46 @@ public class Record implements Serializable {
         this.stratigraphyUnit = stratigraphyUnit;
         this.stratigraphyType = stratigraphyType;
         this.reproRef = reproRef;
-        this.osGridRef = osGridRef;
+        this.osGridRef = bufferOSRef(osGridRef);
+        setLatLong();
         setBigString();
     }
 
-//    public void getLatLong() {
-//        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-//        DocumentBuilder db = null;
-//        try {
-//            db = dbf.newDocumentBuilder();
-//        } catch (ParserConfigurationException e) {
-//            e.printStackTrace();
-//        }
-//        Document doc = db.parse(new URL("http://www.batlab.ucd.ie/gridref/?reftype=NATGRID&refs=O007727").openStream());
-//
-//
-//    }
-
-
-    public void setBigString() {
-        bigString = priref + objectNumber + objectName + scientificName + description + collectorName + collectionPlace + osGridRef +
-                stratigraphyUnit + stratigraphyType + reproRef + "\n";
+    private String bufferOSRef(String osGridRef) {
+        String str = osGridRef;
+        if (osGridRef.equals("unknown location")) {
+            return "unknown";
+        } else if (!osGridRef.equals("unknown")) {
+            str = osGridRef.substring(0, 4) + "0" + osGridRef.substring(4, 6) + "0";
+        }
+        return str;
     }
 
-    public String getPriref() {
-        return priref;
+    private void setLatLong() {
+        if (!osGridRef.equals("unknown")) {
+            OSRef os = new OSRef(osGridRef);
+            LatLng latLng = os.toLatLng();
+            this.latitude = latLng.getLat();
+            this.longitude = latLng.getLng();
+        }
     }
 
-    public String getDescription() {
-        return description;
+    private String getLatitude() {
+        return String.valueOf(latitude);
     }
 
-    public String getCollectionPlace() {
-        return collectionPlace;
+    private String getLongitude() {
+        return String.valueOf(longitude);
     }
 
-    public void setCollectionPlace(String str) {
-        collectionPlace = str;
+    private void setBigString() {
+        bigString = priref + "," + objectNumber + "," + objectName + "," + scientificName + "," + description
+            + "," + collectorName + "," + collectionPlace + "," + osGridRef + "," + stratigraphyUnit
+            + "," + stratigraphyType + "," + reproRef + "," + getLatitude() + "," + getLongitude() + "\n";
     }
 
-    public String getStratigraphyUnit() {
-        return stratigraphyUnit;
-    }
-
-    public void setStratigraphyUnit(String str) {
-        stratigraphyUnit = str;
-    }
-
-    public String getStratigraphyType() {
-        return stratigraphyType;
-    }
-
-    public void setStratigraphyType(String str) {
-        stratigraphyType = str;
-    }
-
-    public String getOsGridRef() {
-        return osGridRef;
-    }
-
-    public String getObjectNumber() {
-        return objectNumber;
-    }
-
-    public String getObjectName() {
-        return objectName;
-    }
-
-    public String getScientificName() {
-        return scientificName;
-    }
-
-    public String getBigString() {
+    String getBigString() {
         return bigString;
     }
 
-    public String getCollectorName() {
-        return collectorName;
-    }
 }
