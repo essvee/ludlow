@@ -13,8 +13,8 @@ import org.w3c.dom.Element;
 
 public class Main {
     private ArrayList<Record> recordList = new ArrayList<>();
-    private static final String HEADER_STRING = "priref\tObject Number\tObject Name\tScientific Name\tDescription\tCollector Name\tCollection Place\t" +
-        "OS Grid Ref\tStratigraphy Unit\tStratigraphy Type\tImage URL\n";
+    private static final String HEADER_STRING = "priref,Object Number,Object Name,Scientific Name,Description,Collector Name,Collection Place," +
+        "OS Grid Ref,Stratigraphy Unit,Stratigraphy Type,Image URL\n";
     private static final String URL = "https://github.com/NaturalHistoryMuseum/LudlowMuseumImgs/raw/master/";
 
     public static void main(String[] args) {
@@ -35,7 +35,6 @@ public class Main {
 
             NodeList nList = doc.getElementsByTagName("record");
 
-            // Todo: Escape any commas in original string and output as csv
             // Todo: Convert OS to lat long (Use Jcoord?)
             // Iterate over each node
             for (int temp = 0; temp < nList.getLength(); temp++) {
@@ -52,25 +51,31 @@ public class Main {
                     // Concatenate values of duplicate fields together if we want them all
                     String objectNumber = getElementValue(eElement, "object_number");
                     String objectName = getElementValue(eElement, "object_name");
+                    String osGridRef = getElementValue(eElement, "field_coll.gridref");
+                    String stratigraphyUnit = getElementValue(eElement, "stratigraphy.unit");
+                    String stratigraphyType = getElementValue(eElement, "stratigraphy.type");
                     String scientificName = getElementValue(eElement, "taxonomy.scientific_name");
                     String description = getElementValue(eElement, "description");
                     String collectorName = getElementValue(eElement, "field_coll.name");
                     String collectionPlace = getElementValue(eElement, "field_coll.place");
-                    String osGridRef = getElementValue(eElement, "field_coll.gridref");
-                    String stratigraphyUnit = getElementValue(eElement, "stratigraphy.unit");
-                    String stratigraphyType = getElementValue(eElement, "stratigraphy.type");
-
 
                     // Create new record object and store
                     Record tempRec = new Record(priref, objectNumber, objectName, scientificName,
-                            description, collectorName, collectionPlace, osGridRef, stratigraphyUnit, stratigraphyType,
-                            reproRef);
+                        description, collectorName, collectionPlace, osGridRef, stratigraphyUnit,
+                        stratigraphyType, reproRef);
                     recordList.add(tempRec);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String escapeCommas(String str) {
+      if (StringUtils.contains(str, ",")) {
+        str = "\"" + str + "\"";
+      }
+      return str;
     }
 
     // For when you only want the value from the first occurrence of a field
@@ -87,11 +92,11 @@ public class Main {
             i++;
         }
 
-        // For image url field, trim the local filepath so we just have the filename
+        // For image field, extract filename from filepath
         if (tagName.equals("reproduction.reference")) {
             returnString = StringUtils.substringAfterLast(returnString, "\\");
         }
-        return returnString + "\t";
+        return escapeCommas(returnString) + ",";
     }
 
     // For when you want all the values, concatenated where > 1 exists
@@ -116,12 +121,12 @@ public class Main {
         } else {
             returnString = "unknown";
         }
-        return returnString + "\t";
+        return escapeCommas(returnString) + ",";
     }
 
-    // Writes each object to a new row in ludlowOut.txt
+    // Writes each object to a new row in ludlowOut.csv
     public void writeOut() {
-        String fileName = "ludlowOut.txt";
+        String fileName = "ludlowOut.csv";
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
             bw.write(HEADER_STRING);
@@ -129,7 +134,7 @@ public class Main {
                 bw.write(record.getBigString());
             }
         } catch (IOException ex) {
-            System.out.println("Flush failed: couldn't write ludlow.txt");
+            System.out.println("Flush failed: couldn't write ludlow.csv");
             ex.printStackTrace();
         }
     }
