@@ -40,10 +40,18 @@ class Record implements Serializable {
         setBigString();
     }
 
+
+    /**
+     * @param osGridRef Grid reference (4/6 chars)
+     * @return String 'unknown' if not a grid reference. Returns gridRef buffered to eight characters if valid.
+     */
     private String bufferOSRef(String osGridRef) {
         String str = osGridRef;
-        if (osGridRef.equals("unknown location")) {
+        if (osGridRef.equals("unknown location") || osGridRef.equals("Unknown")) {
             return "unknown";
+        } else if (osGridRef.length() == 4) {
+            str = osGridRef.substring(0, 3) + "00" + osGridRef.substring(3, 4) + "00";
+            return str;
         } else if (!osGridRef.equals("unknown")) {
             str = osGridRef.substring(0, 4) + "0" + osGridRef.substring(4, 6) + "0";
         }
@@ -68,13 +76,18 @@ class Record implements Serializable {
     }
 
     private void setBigString() {
-        bigString = priref + "," + objectNumber + "," + objectName + "," + scientificName + "," + description
-            + "," + collectorName + "," + collectionPlace + "," + osGridRef + "," + stratigraphyUnit
-            + "," + stratigraphyType + "," + reproRef + "," + getLatitude() + "," + getLongitude() + "\n";
+        bigString = priref + "," + objectNumber + "," + objectName + "," + scientificName + "," + description + ","
+                + collectorName + "," + collectionPlace + "," + osGridRef + ","
+                + stratigraphyUnit + "," + stratigraphyType + "," + reproRef + ","
+                + getLatitude() + "," + getLongitude() + "\n";
     }
 
     String getBigString() {
         return bigString;
+    }
+
+    String getPriref() {
+        return priref;
     }
 
 }

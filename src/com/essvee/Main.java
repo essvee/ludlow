@@ -109,12 +109,15 @@ public class Main {
                     returnString += eElement
                             .getElementsByTagName(tagName)
                             .item(i)
-                            .getTextContent() + "; ";
+                            .getTextContent()
+                            .trim() + "; ";
+
                 } else {
                     returnString += eElement
                             .getElementsByTagName(tagName)
                             .item(i)
-                            .getTextContent();
+                            .getTextContent()
+                            .trim();
                 }
             }
         } else {
