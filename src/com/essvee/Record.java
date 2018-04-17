@@ -26,7 +26,7 @@ class Record implements Serializable {
     Record(String priref, String objectNumber, String objectName, String scientificName, String description, String collectorName,
                   String collectionPlace, String osGridRef, String stratigraphyUnit, String stratigraphyType, String reproRef) {
         this.priref = priref;
-        this.objectNumber = objectNumber;
+        this.objectNumber = decodeSHYMS(objectNumber);
         this.objectName = objectName;
         this.scientificName = scientificName;
         this.description = description;
@@ -35,9 +35,19 @@ class Record implements Serializable {
         this.stratigraphyUnit = stratigraphyUnit;
         this.stratigraphyType = stratigraphyType;
         this.reproRef = reproRef;
-        this.osGridRef = bufferOSRef(osGridRef);
+        this.osGridRef = bufferOSRef(osGridRef.replace(" ", ""));
         setLatLong();
         setBigString();
+    }
+
+    private String decodeSHYMS(String shyms) {
+        if (shyms.startsWith("S")) {
+            shyms = shyms.replace("/", "_");
+            shyms = shyms.replace(": ", "_");
+            shyms = shyms.toLowerCase();
+            System.out.println(shyms);
+        }
+        return shyms;
     }
 
 
@@ -47,7 +57,7 @@ class Record implements Serializable {
      */
     private String bufferOSRef(String osGridRef) {
         String str = osGridRef;
-        if (osGridRef.equals("unknown location") || osGridRef.equals("Unknown")) {
+        if (osGridRef.equals("unknownlocation") || osGridRef.equals("Unknown")) {
             return "unknown";
         } else if (osGridRef.length() == 4) {
             str = osGridRef.substring(0, 3) + "00" + osGridRef.substring(3, 4) + "00";
