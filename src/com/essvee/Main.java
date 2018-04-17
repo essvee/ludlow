@@ -2,6 +2,7 @@ package com.essvee;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -15,7 +16,6 @@ public class Main {
     private ArrayList<Record> recordList = new ArrayList<>();
     private static final String HEADER_STRING = "priref,Object Number,Object Name,Scientific Name,Description,Collector Name,Collection Place," +
         "OS Grid Ref,Stratigraphy Unit,Stratigraphy Type,Image URL,Latitude,Longitude\n";
-    private static final String URL = "https://github.com/NaturalHistoryMuseum/LudlowMuseumImgs/raw/master/";
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -25,6 +25,7 @@ public class Main {
 
     // Parses each <record> element in xml into an object of type Record
     private void doParse() {
+        String ref = "";
         try {
             File inputFile = new File("input.xml");
 
@@ -34,6 +35,8 @@ public class Main {
             doc.getDocumentElement().normalize();
 
             NodeList nList = doc.getElementsByTagName("record");
+
+            HashMap<String, String> urlMap = BoxLinks.getURLs();
 
             // Iterate over each node
             for (int temp = 0; temp < nList.getLength(); temp++) {
@@ -45,7 +48,10 @@ public class Main {
 
                     // Get the value of the first field if we only want one
                     String priref = getFirstElementValue(eElement, "priref");
-                    String reproRef = URL + getFirstElementValue(eElement, "reproduction.reference");
+                    String filereference = getFirstElementValue(eElement, "reproduction.reference");
+
+                    // Use the filename to retrieve the Box url
+                    String reproRef = urlMap.get(filereference);
 
                     // Concatenate values of duplicate fields together if we want them all
                     String objectNumber = getElementValue(eElement, "object_number");
@@ -66,6 +72,7 @@ public class Main {
                 }
             }
         } catch (Exception e) {
+            System.out.println("Problem with record " + ref);
             e.printStackTrace();
         }
     }
